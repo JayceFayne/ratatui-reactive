@@ -1,0 +1,37 @@
+[package]
+name = "ratatui-reactive"
+version = "0.1.0"
+authors = ["Jayce Fayne <jayce.fayne@mailbox.org>"]
+repository = "https://github.com/jaycefayne/daxo"
+edition = "2024"
+description = "A minimalistic framework for building TUI applications using fine-grained reactivity."
+license = "MIT"
+categories = ["command-line-interface", "asynchronous"]
+keywords = ["tui", "terminal-ui", "ratatui", "reactive", "async"]
+readme = "README.md"
+
+
+[dependencies]
+sycamore-reactive = "0.9"
+ratatui = { version = "0.30", default-features = false }
+async-local-channel = "0.2"
+futures-lite = { version = "2", default-features = false }
+
+crossterm = { version = "0.29", features = ["event-stream"], optional = true }
+
+tokio = { version = "1", features = ["time", "rt"], optional = true }
+
+async-io = { version = "2", optional = true }
+async-global-executor = { version = "3", optional = true }
+
+
+[features]
+crossterm = ["dep:crossterm", "ratatui/crossterm"]
+tokio = ["dep:tokio"]
+async-io = ["dep:async-io", "dep:async-global-executor"]
+default = ["tokio", "crossterm"]
+
+[dev-dependencies]
+color-eyre = "0.6"
+tokio = { version = "1", features = ["full"] }
+sycamore-reactive = { version = "0.9", features = ["nightly"] }
