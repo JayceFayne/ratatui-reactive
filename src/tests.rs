@@ -1,5 +1,5 @@
 use crate::{ReactiveApp, Runtime, init_mock_events, on_key_press};
-use async_local_channel::mpsc;
+use async_local_channel::spsc;
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
 use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
@@ -12,7 +12,7 @@ use tokio::time::sleep;
 
 #[tokio::test(flavor = "local")]
 async fn quit() {
-    let (event_tx, event_rx) = mpsc::channel();
+    let (event_tx, event_rx) = spsc::channel();
 
     let app = ReactiveApp::new(move || {
         init_mock_events(event_rx.activate());

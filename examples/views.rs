@@ -3,15 +3,15 @@ use crossterm::event::KeyCode;
 use ratatui::Frame;
 use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph};
 use ratatui_reactive::{
-    Render, Router, Runtime, create_interval, on_key_press, provide_router, run,
+    Render, Route, Router, Runtime, create_interval, on_key_press, provide_router, run,
 };
-use std::rc::Rc;
 use std::time::Duration;
 use sycamore_reactive::{create_memo, create_signal, use_context};
 use tokio::task::LocalSet;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 enum View {
+    #[default]
     Menu,
     Counter,
     Input,
@@ -141,19 +141,15 @@ fn input() -> impl Render {
     }
 }
 
-fn create_view(view: View) -> Rc<dyn Render> {
-    match view {
-        View::Menu => Rc::new(menu()),
-        View::Counter => Rc::new(counter()),
-        View::Input => Rc::new(input()),
-    }
-}
-
 fn app() -> impl Render {
-    let view = provide_router(create_view, View::Menu);
+    let view = provide_router(|view| match view {
+        View::Menu => Route::new(menu()),
+        View::Counter => Route::new(counter()),
+        View::Input => Route::new(input()),
+    });
 
     move |frame: &mut Frame| {
-        view.get_clone().render(frame);
+        view.render(frame);
     }
 }
 
