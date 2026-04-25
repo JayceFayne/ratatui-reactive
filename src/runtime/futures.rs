@@ -1,9 +1,8 @@
-use crate::spawn;
+use crate::{spawn, spawn_local};
 use async_local_channel::oneshot;
 use futures_lite::FutureExt;
 use std::fmt::Debug;
 use sycamore_reactive::{ReadSignal, create_signal, on_cleanup};
-use tokio::task::spawn_local;
 
 #[inline]
 #[cfg_attr(debug_assertions, track_caller)]
