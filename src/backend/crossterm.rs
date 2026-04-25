@@ -6,7 +6,8 @@ use crossterm::event::{Event, KeyEvent, MouseEvent};
 use futures_lite::stream::StreamExt;
 use std::io::Error;
 use sycamore_reactive::{
-    ReadSignal, create_effect, create_signal, provide_context, use_context, use_current_scope,
+    ReadSignal, create_effect, create_signal, provide_context, untrack, use_context,
+    use_current_scope,
 };
 
 #[derive(Debug, Clone)]
@@ -65,9 +66,15 @@ pub async fn run<F: Render + 'static, C: Component<F>>(app: C) -> Result<(), Err
 #[cfg_attr(debug_assertions, track_caller)]
 pub fn on_event(mut fun: impl FnMut(Event) + 'static) {
     let event = use_context::<Events>().0;
+    let mut init = true;
     create_effect(move || {
+        if init {
+            event.track();
+            init = false;
+            return;
+        }
         if let Some(event) = event.get_clone() {
-            fun(event)
+            untrack(|| fun(event))
         }
     });
 }
