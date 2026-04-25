@@ -1,7 +1,8 @@
 use color_eyre::Result;
 use crossterm::event::KeyCode;
-use ratatui::Frame;
-use ratatui::widgets::Paragraph;
+use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
+use ratatui::widgets::{Paragraph, Widget};
 use ratatui_reactive::{Render, Runtime, on_key_press, run};
 use sycamore_reactive::use_context;
 use tokio::task::LocalSet;
@@ -17,8 +18,8 @@ fn app() -> impl Render {
 
     let greeting = Paragraph::new("Hello World! (press 'q' to quit)");
 
-    move |frame: &mut Frame| {
-        frame.render_widget(&greeting, frame.area());
+    move |area: Rect, buf: &mut Buffer| {
+        (&greeting).render(area, buf);
     }
 }
 

@@ -1,5 +1,4 @@
 use crate::ReactiveApp;
-use ratatui::Frame;
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
@@ -10,7 +9,7 @@ use tokio::time::sleep;
 
 #[tokio::test(flavor = "local")]
 async fn first_draw() {
-    let app = ReactiveApp::new(move || |_: &mut Frame| ());
+    let app = ReactiveApp::new(move || |_: Rect, _: &mut Buffer| ());
     assert!(app.draw_requested().await);
     let backend = TestBackend::new(10, 3);
     let mut terminal = Terminal::new(backend).unwrap();

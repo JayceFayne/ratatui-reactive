@@ -1,7 +1,8 @@
 use color_eyre::Result;
 use crossterm::event::KeyCode;
-use ratatui::Frame;
-use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph};
+use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
+use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph, Widget};
 use ratatui_reactive::{
     Render, Route, Router, Runtime, create_interval, on_key_press, provide_router, run,
 };
@@ -64,8 +65,8 @@ fn menu() -> impl Render {
         )
     });
 
-    move |frame: &mut Frame| {
-        frame.render_widget(list.get_clone(), frame.area());
+    move |area: Rect, buf: &mut Buffer| {
+        list.get_clone().render(area, buf);
     }
 }
 
@@ -92,8 +93,8 @@ fn counter() -> impl Render {
         Paragraph::new(text).block(Block::default().borders(Borders::ALL).title("Counter"))
     });
 
-    move |frame: &mut Frame| {
-        frame.render_widget(paragraph.get_clone(), frame.area());
+    move |area: Rect, buf: &mut Buffer| {
+        paragraph.get_clone().render(area, buf);
     }
 }
 
@@ -136,8 +137,8 @@ fn input() -> impl Render {
         Paragraph::new(content).block(Block::default().borders(Borders::ALL).title("Text Input"))
     });
 
-    move |frame: &mut Frame| {
-        frame.render_widget(paragraph.get_clone(), frame.area());
+    move |area: Rect, buf: &mut Buffer| {
+        paragraph.get_clone().render(area, buf);
     }
 }
 
@@ -148,8 +149,8 @@ fn app() -> impl Render {
         View::Input => Route::new(input()),
     });
 
-    move |frame: &mut Frame| {
-        view.render(frame);
+    move |area: Rect, buf: &mut Buffer| {
+        view.render(area, buf);
     }
 }
 

@@ -1,6 +1,7 @@
 use crate::Render;
 use crate::delay::delayed_signal;
-use ratatui::Frame;
+use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
 use std::fmt::Debug;
 use std::rc::Rc;
 use sycamore_reactive::{Signal, create_memo, provide_context};
@@ -30,12 +31,12 @@ pub fn provide_router<R: 'static + Clone + Default + Debug>(
     let router = Router { route };
     provide_context(router);
     let component = create_memo(move || mapping(delayed_route.get_clone()));
-    move |frame: &mut Frame| {
-        component.get_clone().inner.render(frame);
+    move |area: Rect, buf: &mut Buffer| {
+        component.get_clone().inner.render(area, buf);
     }
 }
 
-impl<R: 'static + Copy> Router<R> {
+impl<R> Router<R> {
     pub fn goto(&self, route: R) {
         self.route.set(route);
     }

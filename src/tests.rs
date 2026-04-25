@@ -1,10 +1,10 @@
 use crate::{ReactiveApp, Runtime, init_mock_events, on_key_press};
 use async_local_channel::spsc;
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
+use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
-use ratatui::{Frame, Terminal};
 use std::time::Duration;
 use sycamore_reactive::use_context;
 use tokio::select;
@@ -24,7 +24,7 @@ async fn quit() {
             }
         });
 
-        move |_: &mut Frame| ()
+        move |_: Rect, _: &mut Buffer| ()
     });
     assert!(app.draw_requested().await);
     let backend = TestBackend::new(10, 3);

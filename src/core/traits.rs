@@ -1,16 +1,17 @@
-use ratatui::Frame;
+use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
 
 pub trait Render {
-    fn render(&self, frame: &mut Frame);
+    fn render(&self, area: Rect, buf: &mut Buffer);
 }
 
 impl<F> Render for F
 where
-    F: Fn(&mut Frame),
+    F: Fn(Rect, &mut Buffer),
 {
     #[inline]
-    fn render(&self, frame: &mut Frame) {
-        (self)(frame)
+    fn render(&self, area: Rect, buf: &mut Buffer) {
+        (self)(area, buf)
     }
 }
 

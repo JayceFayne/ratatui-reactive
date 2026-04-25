@@ -54,7 +54,8 @@ impl ReactiveApp {
                 current_frame.track();
                 if let Some(current_frame) = current_frame.replace_silent(None) {
                     // SAFETY: we set this frame once every `draw`
-                    app.render(unsafe { &mut *current_frame })
+                    let frame = unsafe { &mut *current_frame };
+                    app.render(frame.area(), frame.buffer_mut())
                 } else {
                     request_draw_tx.send(true).unwrap();
                 }
