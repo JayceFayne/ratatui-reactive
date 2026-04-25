@@ -1,5 +1,4 @@
-use crate::Render;
-use crate::delay::delayed_signal;
+use crate::{Render, delayed_signal};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use std::fmt::Debug;
