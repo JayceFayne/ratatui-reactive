@@ -1,4 +1,4 @@
-use crate::runtime::{sleep, spawn};
+use crate::runtime::{sleep, spawn_local};
 use std::time::Duration;
 use sycamore_reactive::{create_signal, use_current_scope};
 
@@ -7,7 +7,7 @@ use sycamore_reactive::{create_signal, use_current_scope};
 pub fn create_timeout(fun: impl FnOnce() + 'static, duration: Duration) {
     let trigger = create_signal(());
     let scope = use_current_scope();
-    spawn(async move {
+    spawn_local(async move {
         sleep(duration).await;
         if trigger.is_alive() {
             scope.run_in(fun);
@@ -20,7 +20,7 @@ pub fn create_timeout(fun: impl FnOnce() + 'static, duration: Duration) {
 pub fn create_interval(mut fun: impl FnMut() + 'static, duration: Duration) {
     let trigger = create_signal(());
     let scope = use_current_scope();
-    spawn(async move {
+    spawn_local(async move {
         loop {
             sleep(duration).await;
             if trigger.is_alive() {

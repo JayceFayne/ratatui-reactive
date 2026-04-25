@@ -1,4 +1,4 @@
-use crate::runtime::spawn;
+use crate::runtime::spawn_local;
 use async_local_channel::spsc;
 use std::fmt::Debug;
 use sycamore_reactive::{ReadSignal, Signal, create_effect, create_signal, use_current_scope};
@@ -14,7 +14,7 @@ pub fn delayed_signal<T: Debug + Clone>(value: T) -> (Signal<T>, ReadSignal<T>) 
         tx.send(input.get_clone()).unwrap();
     });
     let scope = use_current_scope();
-    spawn(async move {
+    spawn_local(async move {
         loop {
             let value = rx.recv().await.unwrap();
             if output.is_alive() {

@@ -1,4 +1,4 @@
-use crate::runtime::spawn;
+use crate::runtime::spawn_local;
 use crate::{Component, Render, Runtime, run_with_terminal};
 use async_local_channel::spsc;
 use crossterm::event::EventStream;
@@ -18,7 +18,7 @@ fn init_events() {
     provide_context(Events(*events));
     let scope = use_current_scope();
     let trigger = create_signal(());
-    spawn(async move {
+    spawn_local(async move {
         let mut event_stream = EventStream::new();
         while let Some(event) = event_stream.next().await {
             if trigger.is_alive() {
@@ -36,7 +36,7 @@ pub fn init_mock_events(rx: spsc::Receiver<Event>) {
     provide_context(Events(*events));
     let scope = use_current_scope();
     let trigger = create_signal(());
-    spawn(async move {
+    spawn_local(async move {
         loop {
             let event = rx.recv().await.unwrap();
             if trigger.is_alive() {
