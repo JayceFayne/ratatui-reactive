@@ -67,9 +67,6 @@ impl ReactiveApp {
         }
     }
 
-    /// # Safety
-    ///
-    /// This function should only be called with the same type that was used in `new`
     #[inline]
     pub fn draw(&self, frame: &mut Frame) {
         // SAFETY: this will trigger exactly one `render` call

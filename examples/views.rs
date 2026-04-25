@@ -2,7 +2,9 @@ use color_eyre::Result;
 use crossterm::event::KeyCode;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
-use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph, Widget};
+use ratatui::widgets::{
+    Block, Borders, List, ListItem, ListState, Paragraph, StatefulWidget, Widget,
+};
 use ratatui_reactive::{
     Render, Route, Router, Runtime, create_interval, on_key_press, provide_router, run,
 };
@@ -19,54 +21,36 @@ enum View {
 }
 
 fn menu() -> impl Render {
-    let selected = {
-        let runtime = use_context::<Runtime>();
-        let router = use_context::<Router<View>>();
-        let selected = create_signal(0_usize);
+    let list_state = create_signal(ListState::default().with_selected(Some(0)));
+    let runtime = use_context::<Runtime>();
+    let router = use_context::<Router<View>>();
 
-        on_key_press(move |key| match key.code {
-            KeyCode::Up => selected.update(|s| *s = (*s).saturating_sub(1)),
-            KeyCode::Down => selected.update(|s| *s = (*s + 1).min(3)),
-            KeyCode::Enter => {
-                match selected() {
-                    0 => router.goto(View::Counter),
-                    1 => router.goto(View::Input),
-                    2 => runtime.quit(),
-                    _ => (),
-                };
-            }
-            KeyCode::Char('q') => runtime.quit(),
-            _ => (),
-        });
-
-        selected
-    };
-
-    let menu_items = ["Counter", "Input", "Quit"];
-
-    let list = create_memo(move || {
-        let items: Vec<ListItem> = menu_items
-            .iter()
-            .enumerate()
-            .map(|(i, item)| {
-                let content = if i == selected() {
-                    format!("> {item}")
-                } else {
-                    format!("  {item}")
-                };
-                ListItem::new(content)
-            })
-            .collect();
-
-        List::new(items).block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Menu (↑/↓: navigate, Enter: select, q: quit)"),
-        )
+    on_key_press(move |key| match key.code {
+        KeyCode::Up => list_state.update(|s| s.select_previous()),
+        KeyCode::Down => list_state.update(|s| s.select_next()),
+        KeyCode::Enter if let Some(selected) = list_state.get().selected() => {
+            match selected {
+                0 => router.goto(View::Counter),
+                1 => router.goto(View::Input),
+                2 => runtime.quit(),
+                _ => (),
+            };
+        }
+        KeyCode::Char('q') => runtime.quit(),
+        _ => (),
     });
 
+    let menu_items = ["Counter", "Input", "Quit"];
+    let items: Vec<ListItem> = menu_items.into_iter().map(ListItem::new).collect();
+    let list = List::new(items).highlight_symbol("> ").block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title("Menu (↑/↓: navigate, Enter: select, q: quit)"),
+    );
+
     move |area: Rect, buf: &mut Buffer| {
-        list.get_clone().render(area, buf);
+        list_state.track();
+        list_state.update(|s| StatefulWidget::render(&list, area, buf, s));
     }
 }
 
