@@ -4,24 +4,23 @@ use ratatui::Frame;
 use std::fmt::Debug;
 use std::mem;
 use sycamore_reactive::{
-    RootHandle, Signal, batch, create_effect, create_memo, create_root, create_signal,
-    provide_context,
+    RootHandle, Signal, batch, create_effect, create_root, create_signal, provide_context,
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Runtime {
-    request_draw: Signal<bool>,
+    request_draw: mpsc::Sender<bool>,
 }
 
 impl Runtime {
     #[inline]
     pub fn quit(&self) {
-        self.request_draw.set(false)
+        self.request_draw.send(false).unwrap();
     }
 
     #[inline]
     pub fn request_draw(&self) {
-        self.request_draw.set(true)
+        self.request_draw.send(true).unwrap();
     }
 }
 
@@ -34,14 +33,12 @@ pub struct ReactiveApp {
 impl ReactiveApp {
     #[inline]
     pub fn new<R: Render + 'static, C: Component<R>>(component: C) -> ReactiveApp {
-        let (request_draw_tx, request_draw_rx) = mpsc::channel();
+        let (request_draw, request_draw_rx) = mpsc::channel();
 
         let root = {
-            let request_draw_tx = request_draw_tx.clone();
+            let request_draw = request_draw.clone();
             create_root(move || {
-                let request_draw = create_signal(true);
                 provide_context(Runtime { request_draw });
-                create_memo(move || request_draw_tx.send(request_draw.get()).unwrap());
             })
         };
 
@@ -57,7 +54,7 @@ impl ReactiveApp {
                     let frame = unsafe { &mut *current_frame };
                     app.render(frame.area(), frame.buffer_mut())
                 } else {
-                    request_draw_tx.send(true).unwrap();
+                    request_draw.send(true).unwrap();
                 }
             });
             current_frame
