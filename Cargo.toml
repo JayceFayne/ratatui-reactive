@@ -2,7 +2,7 @@
 name = "ratatui-reactive"
 version = "0.3.0"
 authors = ["Jayce Fayne <jayce.fayne@mailbox.org>"]
-repository = "https://github.com/jaycefayne/daxo"
+repository = "https://github.com/jaycefayne/ratatui-reactive"
 edition = "2024"
 description = "A minimalistic framework for building TUI applications using fine-grained reactivity."
 license = "MIT"
