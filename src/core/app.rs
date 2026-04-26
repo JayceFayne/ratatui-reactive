@@ -1,5 +1,6 @@
 use crate::{Component, Render};
-use async_local_channel::mpsc;
+use async_local_channel::watch;
+use futures_lite::FutureExt;
 use ratatui::Frame;
 use std::fmt::Debug;
 use std::mem;
@@ -9,40 +10,44 @@ use sycamore_reactive::{
 
 #[derive(Debug, Clone)]
 pub struct Runtime {
-    request_draw: mpsc::Sender<bool>,
+    request_draw: watch::Sender<()>,
+    quit: watch::Sender<()>,
 }
 
 impl Runtime {
     #[inline]
     pub fn quit(&self) {
-        self.request_draw.send(false).unwrap();
+        self.quit.send(()).unwrap();
     }
 
     #[inline]
     pub fn request_draw(&self) {
-        self.request_draw.send(true).unwrap();
+        self.request_draw.send(()).unwrap();
     }
 }
 
 pub struct ReactiveApp {
     root: RootHandle,
-    request_draw_rx: mpsc::Receiver<bool>,
+    request_draw_rx: watch::Receiver<()>,
+    quit_rx: watch::Receiver<()>,
     current_frame: Signal<Option<*mut Frame<'static>>>,
 }
 
 impl ReactiveApp {
     #[inline]
     pub fn new<R: Render + 'static, C: Component<R>>(component: C) -> ReactiveApp {
-        let (request_draw, request_draw_rx) = mpsc::channel();
+        let (request_draw, request_draw_rx) = watch::channel();
+        let (quit, quit_rx) = watch::channel();
 
         let root = {
             let request_draw = request_draw.clone();
             create_root(move || {
-                provide_context(Runtime { request_draw });
+                provide_context(Runtime { request_draw, quit });
             })
         };
 
         let request_draw_rx = request_draw_rx.activate();
+        let quit_rx = quit_rx.activate();
 
         let current_frame = root.run_in(|| {
             let current_frame: Signal<Option<*mut Frame>> = create_signal(None);
@@ -54,7 +59,7 @@ impl ReactiveApp {
                     let frame = unsafe { &mut *current_frame };
                     app.render(frame.area(), frame.buffer_mut())
                 } else {
-                    request_draw.send(true).unwrap();
+                    request_draw.send(()).unwrap();
                 }
             });
             current_frame
@@ -63,6 +68,7 @@ impl ReactiveApp {
         ReactiveApp {
             root,
             request_draw_rx,
+            quit_rx,
             current_frame,
         }
     }
@@ -75,13 +81,20 @@ impl ReactiveApp {
             .run_in(move || self.current_frame.set(Some(frame)))
     }
 
+    async fn on_quit(&self) -> bool {
+        self.quit_rx.recv().await.unwrap();
+        self.root.dispose();
+        false
+    }
+
+    async fn on_draw_requested(&self) -> bool {
+        self.request_draw_rx.recv().await.unwrap();
+        true
+    }
+
     #[inline]
     pub async fn draw_requested(&self) -> bool {
-        let draw_requested = self.request_draw_rx.recv().await.unwrap();
-        if !draw_requested {
-            self.root.dispose();
-        }
-        draw_requested
+        self.on_quit().or(self.on_draw_requested()).await
     }
 }
 

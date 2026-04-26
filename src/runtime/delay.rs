@@ -1,4 +1,4 @@
-use crate::runtime::spawn_local;
+use crate::spawn_local;
 use async_local_channel::spsc;
 use std::fmt::Debug;
 use sycamore_reactive::{ReadSignal, Signal, create_effect, create_signal, use_current_scope};

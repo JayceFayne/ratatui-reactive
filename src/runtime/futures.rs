@@ -12,12 +12,12 @@ where
     F::Output: Send + 'static + Debug,
 {
     let result = create_signal(None);
-    let (tx, rx) = oneshot::channel();
-    let rx = rx.activate();
     let handle = spawn(future);
+    let (tx, rx) = oneshot::channel();
     on_cleanup(move || {
         tx.send(()).unwrap();
     });
+    let rx = rx.activate();
     spawn_local(async move {
         async move {
             result.set(Some(handle.await.unwrap()));
