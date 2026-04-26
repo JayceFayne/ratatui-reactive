@@ -14,6 +14,7 @@ use sycamore_reactive::{
 pub(crate) struct Events(ReadSignal<Option<Event>>);
 
 #[inline]
+#[cfg_attr(debug_assertions, track_caller)]
 fn init_events() {
     let events = create_signal(None);
     provide_context(Events(*events));
@@ -32,6 +33,7 @@ fn init_events() {
 }
 
 #[inline]
+#[cfg_attr(debug_assertions, track_caller)]
 pub fn init_mock_events(rx: spsc::Receiver<Event>) {
     let events = create_signal(None);
     provide_context(Events(*events));

@@ -8,6 +8,7 @@ pub struct DelayedSignal<T> {
 }
 
 impl<T> Clone for DelayedSignal<T> {
+    #[inline]
     fn clone(&self) -> Self {
         Self {
             tx: self.tx.clone(),
