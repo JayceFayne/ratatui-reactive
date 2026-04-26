@@ -3,7 +3,7 @@ use crate::{Render, delayed_signal};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use std::rc::Rc;
-use sycamore_reactive::provide_context;
+use sycamore_reactive::{create_memo, provide_context};
 
 #[derive(Debug)]
 pub struct Router<R> {
@@ -35,13 +35,18 @@ impl Route {
 #[inline]
 #[cfg_attr(debug_assertions, track_caller)]
 pub fn provide_router<R: 'static + Default>(
-    mapping: impl FnMut(&R) -> Route + 'static,
+    mut mapping: impl FnMut(R) -> Route + 'static,
 ) -> impl Render {
     let (route, delayed_route) = delayed_signal(R::default());
     let router = Router { route };
     provide_context(router);
-    let component = delayed_route.map(mapping);
-    move |area: Rect, buf: &mut Buffer| component.with(|c| c.inner.render(area, buf))
+    let component = create_memo(move || {
+        delayed_route.track();
+        mapping(delayed_route.take())
+    });
+    move |area: Rect, buf: &mut Buffer| {
+        component.get_clone().inner.render(area, buf);
+    }
 }
 
 impl<R> Router<R> {

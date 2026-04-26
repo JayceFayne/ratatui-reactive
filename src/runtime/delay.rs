@@ -1,6 +1,6 @@
 use crate::spawn_local;
 use async_local_channel::mpsc;
-use sycamore_reactive::{ReadSignal, create_signal, use_current_scope};
+use sycamore_reactive::{Signal, create_signal, use_current_scope};
 
 #[derive(Debug)]
 pub struct DelayedSignal<T> {
@@ -27,7 +27,7 @@ impl<T> DelayedSignal<T> {
 
 #[inline]
 #[cfg_attr(debug_assertions, track_caller)]
-pub fn delayed_signal<T>(value: T) -> (DelayedSignal<T>, ReadSignal<T>) {
+pub fn delayed_signal<T>(value: T) -> (DelayedSignal<T>, Signal<T>) {
     let output = create_signal(value);
     let (tx, rx) = mpsc::channel();
     let rx = rx.activate();
@@ -42,5 +42,5 @@ pub fn delayed_signal<T>(value: T) -> (DelayedSignal<T>, ReadSignal<T>) {
             }
         }
     });
-    (DelayedSignal { tx }, *output)
+    (DelayedSignal { tx }, output)
 }
