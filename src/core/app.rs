@@ -2,7 +2,6 @@ use crate::{Component, Render};
 use async_local_channel::watch;
 use futures_lite::FutureExt;
 use ratatui::Frame;
-use std::fmt::Debug;
 use std::mem;
 use sycamore_reactive::{
     RootHandle, Signal, batch, create_effect, create_root, create_signal, provide_context,

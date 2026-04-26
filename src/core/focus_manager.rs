@@ -1,7 +1,6 @@
 use crate::{Component, Render};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
-use std::fmt::Debug;
 use std::marker::PhantomData;
 use sycamore_reactive::{
     ReadSignal, Signal, create_child_scope, create_signal, on_cleanup, provide_context,
@@ -19,7 +18,7 @@ pub struct Focusable {
     focus: ReadSignal<u8>,
 }
 
-pub fn provide_focus_manager<R: 'static + Clone + Debug + Into<u8>>(initial: R) -> FocusManager<R> {
+pub fn provide_focus_manager<R: 'static + Clone + Into<u8>>(initial: R) -> FocusManager<R> {
     let focus = create_signal(initial.into());
     let focus_manager = FocusManager {
         focus,

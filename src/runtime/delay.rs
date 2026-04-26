@@ -1,6 +1,5 @@
 use crate::spawn_local;
 use async_local_channel::watch;
-use std::fmt::Debug;
 use sycamore_reactive::{ReadSignal, create_signal, use_current_scope};
 
 #[derive(Debug, Clone)]

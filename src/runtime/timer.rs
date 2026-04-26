@@ -1,4 +1,4 @@
-use crate::runtime::{sleep, spawn_local};
+use crate::{sleep, spawn_local};
 use std::time::Duration;
 use sycamore_reactive::{create_signal, use_current_scope};
 

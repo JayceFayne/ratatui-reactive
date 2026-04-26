@@ -2,7 +2,6 @@ use crate::runtime::delay::DelayedSignal;
 use crate::{Render, delayed_signal};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
-use std::fmt::Debug;
 use std::rc::Rc;
 use sycamore_reactive::{create_memo, provide_context};
 
@@ -27,7 +26,7 @@ impl Route {
 
 #[inline]
 #[cfg_attr(debug_assertions, track_caller)]
-pub fn provide_router<R: 'static + Clone + Default + Debug>(
+pub fn provide_router<R: 'static + Clone + Default>(
     mut mapping: impl FnMut(R) -> Route + 'static,
 ) -> impl Render {
     let (route, delayed_route) = delayed_signal(R::default());
