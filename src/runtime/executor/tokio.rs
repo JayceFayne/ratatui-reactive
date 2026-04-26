@@ -1,15 +1,15 @@
 use std::time::Duration;
-use tokio::task::{self, JoinHandle};
+use tokio::task;
 use tokio::time::Sleep;
 
 #[inline]
 #[cfg_attr(debug_assertions, track_caller)]
-pub fn spawn<F>(future: F) -> JoinHandle<F::Output>
+pub fn spawn<F>(future: F)
 where
     F: Future + Send + 'static,
     F::Output: Send + 'static,
 {
-    task::spawn(future)
+    task::spawn(future);
 }
 
 #[inline]
