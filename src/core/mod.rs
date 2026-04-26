@@ -1,8 +1,6 @@
 mod app;
 mod focus_manager;
 mod run;
-#[cfg(test)]
-mod tests;
 mod traits;
 
 pub use app::{ReactiveApp, Runtime};

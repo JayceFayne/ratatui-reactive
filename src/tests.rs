@@ -5,10 +5,24 @@ use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
-use std::time::Duration;
 use sycamore_reactive::use_context;
 use tokio::select;
-use tokio::time::sleep;
+use tokio::task::yield_now;
+
+#[tokio::test(flavor = "local")]
+async fn first_draw() {
+    let app = ReactiveApp::new(move || |_: Rect, _: &mut Buffer| ());
+    assert!(app.draw_requested().await);
+    let backend = TestBackend::new(0, 0);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal.draw(|frame| app.draw(frame)).unwrap();
+    select! {
+        biased;
+
+        _ = app.draw_requested() => panic!("shouldn't request another draw call"),
+        _= yield_now() => (),
+    }
+}
 
 #[tokio::test(flavor = "local")]
 async fn quit() {
@@ -27,17 +41,9 @@ async fn quit() {
         move |_: Rect, _: &mut Buffer| ()
     });
     assert!(app.draw_requested().await);
-    let backend = TestBackend::new(10, 3);
+    let backend = TestBackend::new(0, 0);
     let mut terminal = Terminal::new(backend).unwrap();
     terminal.draw(|frame| app.draw(frame)).unwrap();
-    terminal
-        .backend()
-        .assert_buffer(&Buffer::empty(Rect::new(0, 0, 10, 3)));
-
-    select! {
-        _ = app.draw_requested() => panic!("shouldn't request redraw"),
-        _= sleep(Duration::from_millis(10)) => (),
-    }
     event_tx
         .send(Event::Key(KeyEvent::new(
             KeyCode::Char('q'),
@@ -46,7 +52,9 @@ async fn quit() {
         .unwrap();
 
     select! {
+        biased;
+
         keep_running = app.draw_requested() => assert!(!keep_running),
-        _= sleep(Duration::from_millis(10)) => panic!("expected the app to quit"),
+        _= yield_now() => panic!("expected the app to quit"),
     }
 }
