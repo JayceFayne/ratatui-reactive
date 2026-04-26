@@ -1,13 +1,14 @@
+use crate::runtime::delay::DelayedSignal;
 use crate::{Render, delayed_signal};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use std::fmt::Debug;
 use std::rc::Rc;
-use sycamore_reactive::{Signal, create_memo, provide_context};
+use sycamore_reactive::{create_memo, provide_context};
 
 #[derive(Debug, Clone)]
-pub struct Router<R: 'static> {
-    route: Signal<R>,
+pub struct Router<R> {
+    route: DelayedSignal<R>,
 }
 
 #[derive(Clone)]
@@ -16,6 +17,7 @@ pub struct Route {
 }
 
 impl Route {
+    #[inline]
     pub fn new<R: Render + 'static>(route: R) -> Self {
         Self {
             inner: Rc::new(route),
@@ -23,6 +25,8 @@ impl Route {
     }
 }
 
+#[inline]
+#[cfg_attr(debug_assertions, track_caller)]
 pub fn provide_router<R: 'static + Clone + Default + Debug>(
     mut mapping: impl FnMut(R) -> Route + 'static,
 ) -> impl Render {
@@ -36,6 +40,8 @@ pub fn provide_router<R: 'static + Clone + Default + Debug>(
 }
 
 impl<R> Router<R> {
+    #[inline]
+    #[cfg_attr(debug_assertions, track_caller)]
     pub fn goto(&self, route: R) {
         self.route.set(route);
     }
