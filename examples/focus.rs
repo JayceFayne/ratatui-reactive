@@ -11,7 +11,7 @@ use std::rc::Rc;
 use sycamore_reactive::use_context;
 use tokio::task::LocalSet;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 #[repr(u8)]
 enum Focus {
     TopLeft,

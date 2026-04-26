@@ -12,7 +12,7 @@ use std::time::Duration;
 use sycamore_reactive::{create_memo, create_signal, use_context};
 use tokio::task::LocalSet;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq, Default)]
 enum View {
     #[default]
     Menu,
@@ -78,7 +78,7 @@ fn counter() -> impl Render {
     });
 
     move |area: Rect, buf: &mut Buffer| {
-        paragraph.get_clone().render(area, buf);
+        paragraph.with(|p| p.render(area, buf));
     }
 }
 
@@ -94,8 +94,8 @@ fn input() -> impl Render {
             KeyCode::Backspace => text.update(|text| {
                 text.pop();
             }),
-            KeyCode::Enter if !text.get_clone().is_empty() => {
-                history.update(|history| history.push(text.get_clone().clone()));
+            KeyCode::Enter if !text.with(|t| t.is_empty()) => {
+                history.update(|history| history.push(text.get_clone()));
                 text.set(String::new());
             }
             KeyCode::Esc => router.goto(View::Menu),
@@ -109,7 +109,10 @@ fn input() -> impl Render {
         use std::fmt::Write;
 
         let mut content = String::from("Type to enter text, Enter to submit, Esc to go back\n\n");
-        let _ = write!(content, "Input: {}_\n\n", text.get_clone());
+        text.with(|t| {
+            let _ = write!(content, "Input: {t}_\n\n");
+        });
+
         content.push_str("History:\n");
 
         history.with(|history| {
@@ -122,7 +125,7 @@ fn input() -> impl Render {
     });
 
     move |area: Rect, buf: &mut Buffer| {
-        paragraph.get_clone().render(area, buf);
+        paragraph.with(|p| p.render(area, buf));
     }
 }
 

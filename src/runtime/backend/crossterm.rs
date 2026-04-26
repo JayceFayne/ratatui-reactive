@@ -10,7 +10,7 @@ use sycamore_reactive::{
     use_context, use_current_scope,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct Events(ReadSignal<Option<Event>>);
 
 #[inline]

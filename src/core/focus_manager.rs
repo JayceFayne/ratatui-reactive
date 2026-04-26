@@ -6,25 +6,33 @@ use sycamore_reactive::{
     ReadSignal, Signal, create_child_scope, create_signal, on_cleanup, provide_context,
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub struct FocusManager<R> {
     focus: Signal<u8>,
     marker: PhantomData<*mut R>,
 }
 
-#[derive(Debug, Clone)]
+impl<R> Clone for FocusManager<R> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<R> Copy for FocusManager<R> {}
+
+#[derive(Debug, Clone, Copy)]
 pub struct Focusable {
     route: u8,
     focus: ReadSignal<u8>,
 }
 
-pub fn provide_focus_manager<R: 'static + Clone + Into<u8>>(initial: R) -> FocusManager<R> {
+pub fn provide_focus_manager<R: 'static + Into<u8>>(initial: R) -> FocusManager<R> {
     let focus = create_signal(initial.into());
     let focus_manager = FocusManager {
         focus,
         marker: PhantomData,
     };
-    provide_context(focus_manager.clone());
+    provide_context(focus_manager);
     focus_manager
 }
 
@@ -51,6 +59,6 @@ impl<F: Into<u8>> FocusManager<F> {
 
 impl Focusable {
     pub fn is_focused(&self) -> bool {
-        self.focus.get_clone_untracked() == self.route
+        self.focus.with_untracked(|r| r == &self.route)
     }
 }

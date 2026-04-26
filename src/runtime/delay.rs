@@ -1,24 +1,34 @@
 use crate::spawn_local;
-use async_local_channel::watch;
+use async_local_channel::mpsc;
 use sycamore_reactive::{ReadSignal, create_signal, use_current_scope};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct DelayedSignal<T> {
-    tx: watch::Sender<T>,
+    tx: mpsc::Sender<T>,
+}
+
+impl<T> Clone for DelayedSignal<T> {
+    fn clone(&self) -> Self {
+        Self {
+            tx: self.tx.clone(),
+        }
+    }
 }
 
 impl<T> DelayedSignal<T> {
     #[inline]
     pub fn set(&self, value: T) {
-        self.tx.send(value).unwrap();
+        if self.tx.is_empty() {
+            self.tx.send(value).unwrap();
+        }
     }
 }
 
 #[inline]
 #[cfg_attr(debug_assertions, track_caller)]
-pub fn delayed_signal<T: Clone>(value: T) -> (DelayedSignal<T>, ReadSignal<T>) {
+pub fn delayed_signal<T>(value: T) -> (DelayedSignal<T>, ReadSignal<T>) {
     let output = create_signal(value);
-    let (tx, rx) = watch::channel();
+    let (tx, rx) = mpsc::channel();
     let rx = rx.activate();
     let scope = use_current_scope();
     spawn_local(async move {

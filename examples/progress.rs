@@ -49,7 +49,7 @@ fn app() -> impl Render {
     });
 
     move |area: Rect, buf: &mut Buffer| {
-        gauge.get_clone().render(area, buf);
+        gauge.with(|g| g.render(area, buf));
     }
 }
 
