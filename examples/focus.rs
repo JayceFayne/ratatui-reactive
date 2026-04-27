@@ -12,7 +12,7 @@ use sycamore_reactive::use_context;
 use tokio::task::LocalSet;
 
 #[derive(Debug)]
-#[repr(u8)]
+#[repr(usize)]
 enum Focus {
     TopLeft,
     TopRight,
@@ -20,9 +20,9 @@ enum Focus {
     BottomRight,
 }
 
-impl From<Focus> for u8 {
+impl From<Focus> for usize {
     fn from(value: Focus) -> Self {
-        value as u8
+        value as usize
     }
 }
 

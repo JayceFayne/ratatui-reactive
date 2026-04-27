@@ -8,7 +8,7 @@ use sycamore_reactive::{
 
 #[derive(Debug)]
 pub struct FocusManager<R> {
-    focus: Signal<u8>,
+    focus: Signal<usize>,
     marker: PhantomData<*mut R>,
 }
 
@@ -23,13 +23,13 @@ impl<R> Copy for FocusManager<R> {}
 
 #[derive(Debug, Clone, Copy)]
 pub struct Focusable {
-    route: u8,
-    focus: ReadSignal<u8>,
+    route: usize,
+    focus: ReadSignal<usize>,
 }
 
 #[inline]
 #[cfg_attr(debug_assertions, track_caller)]
-pub fn provide_focus_manager<R: 'static + Into<u8>>(initial: R) -> FocusManager<R> {
+pub fn provide_focus_manager<R: 'static + Into<usize>>(initial: R) -> FocusManager<R> {
     let focus = create_signal(initial.into());
     let focus_manager = FocusManager {
         focus,
@@ -39,7 +39,7 @@ pub fn provide_focus_manager<R: 'static + Into<u8>>(initial: R) -> FocusManager<
     focus_manager
 }
 
-impl<F: Into<u8>> FocusManager<F> {
+impl<F: Into<usize>> FocusManager<F> {
     #[inline]
     #[cfg_attr(debug_assertions, track_caller)]
     pub fn on<R: Render + 'static, C: Component<R>>(self, route: F, component: C) -> impl Render {
