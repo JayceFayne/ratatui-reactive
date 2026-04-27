@@ -1,4 +1,4 @@
-use crate::runtime::delay::DelayedSignal;
+use crate::runtime::delay::DelayedSet;
 use crate::{Render, delayed_signal};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
@@ -6,17 +6,18 @@ use std::rc::Rc;
 use sycamore_reactive::{create_memo, provide_context};
 
 #[derive(Debug)]
-pub struct Router<R> {
-    route: DelayedSignal<R>,
+pub struct Router<R: 'static> {
+    route: DelayedSet<R>,
 }
 
-impl<T> Clone for Router<T> {
+impl<T: 'static> Clone for Router<T> {
+    #[inline]
     fn clone(&self) -> Self {
-        Self {
-            route: self.route.clone(),
-        }
+        *self
     }
 }
+
+impl<T: 'static> Copy for Router<T> {}
 
 #[derive(Clone)]
 pub struct Route {
@@ -39,11 +40,8 @@ pub fn provide_router<R: 'static + Default>(
 ) -> (Router<R>, impl Render) {
     let (route, delayed_route) = delayed_signal(R::default());
     let router = Router { route };
-    provide_context(router.clone());
-    let component = create_memo(move || {
-        delayed_route.track();
-        mapping(delayed_route.take())
-    });
+    provide_context(router);
+    let component = create_memo(move || mapping(delayed_route.get()));
     let render = move |area: Rect, buf: &mut Buffer| {
         component.get_clone().inner.render(area, buf);
     };
