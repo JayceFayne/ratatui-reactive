@@ -4,24 +4,24 @@ use futures_lite::FutureExt;
 use ratatui::Frame;
 use std::mem;
 use sycamore_reactive::{
-    RootHandle, Signal, batch, create_effect, create_root, create_signal, provide_context,
+    RootHandle, Signal, create_effect, create_root, create_signal, provide_context,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Runtime {
-    request_draw: watch::Sender<()>,
-    quit: watch::Sender<()>,
+    request_draw: Signal<()>,
+    quit: Signal<()>,
 }
 
 impl Runtime {
     #[inline]
     pub fn quit(&self) {
-        self.quit.send(()).unwrap();
+        self.quit.set(());
     }
 
     #[inline]
     pub fn request_draw(&self) {
-        self.request_draw.send(()).unwrap();
+        self.request_draw.set(());
     }
 }
 
@@ -35,30 +35,41 @@ pub struct ReactiveApp {
 impl ReactiveApp {
     #[inline]
     pub fn new<R: Render + 'static, C: Component<R>>(component: C) -> ReactiveApp {
-        let (request_draw, request_draw_rx) = watch::channel();
-        let (quit, quit_rx) = watch::channel();
+        let (request_draw_tx, request_draw_rx) = watch::channel();
+        let (quit_tx, quit_rx) = watch::channel();
+        let root = create_root(move || ());
 
-        let root = {
-            let request_draw = request_draw.clone();
-            create_root(move || {
-                provide_context(Runtime { request_draw, quit });
-            })
-        };
+        let runtime = root.run_in(move || {
+            let request_draw = create_signal(());
+            create_effect(move || {
+                request_draw.track();
+                request_draw_tx.send(()).unwrap();
+            });
+
+            let quit = create_signal(());
+            create_effect(move || {
+                quit.track();
+                quit_tx.send(()).unwrap();
+            });
+
+            Runtime { request_draw, quit }
+        });
 
         let request_draw_rx = request_draw_rx.activate();
         let quit_rx = quit_rx.activate();
 
-        let current_frame = root.run_in(|| {
+        let current_frame = root.run_in(move || {
             let current_frame: Signal<Option<*mut Frame>> = create_signal(None);
-            let app = batch(move || component.create());
+            provide_context(runtime);
+            let app = component.create();
             create_effect(move || {
                 current_frame.track();
-                if let Some(current_frame) = current_frame.replace_silent(None) {
+                if let Some(current_frame) = current_frame.take_silent() {
                     // SAFETY: we set this frame once every `draw`
                     let frame = unsafe { &mut *current_frame };
                     app.render(frame.area(), frame.buffer_mut())
                 } else {
-                    request_draw.send(()).unwrap();
+                    runtime.request_draw();
                 }
             });
             current_frame
