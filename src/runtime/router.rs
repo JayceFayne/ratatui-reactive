@@ -36,17 +36,18 @@ impl Route {
 #[cfg_attr(debug_assertions, track_caller)]
 pub fn provide_router<R: 'static + Default>(
     mut mapping: impl FnMut(R) -> Route + 'static,
-) -> impl Render {
+) -> (Router<R>, impl Render) {
     let (route, delayed_route) = delayed_signal(R::default());
     let router = Router { route };
-    provide_context(router);
+    provide_context(router.clone());
     let component = create_memo(move || {
         delayed_route.track();
         mapping(delayed_route.take())
     });
-    move |area: Rect, buf: &mut Buffer| {
+    let render = move |area: Rect, buf: &mut Buffer| {
         component.get_clone().inner.render(area, buf);
-    }
+    };
+    (router, render)
 }
 
 impl<R> Router<R> {

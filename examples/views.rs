@@ -130,7 +130,7 @@ fn input() -> impl Render {
 }
 
 fn app() -> impl Render {
-    let view = provide_router(|view| match view {
+    let (_, view) = provide_router(|view| match view {
         View::Menu => Route::new(menu()),
         View::Counter => Route::new(counter()),
         View::Input => Route::new(input()),
